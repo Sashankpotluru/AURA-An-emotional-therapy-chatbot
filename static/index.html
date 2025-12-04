@@ -1,0 +1,433 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>AURA Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background-color: #e5e7eb;
+      color: #111827;
+    }
+    body {
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      min-height: 100vh;
+      background: radial-gradient(circle at top, #ffffff 0, #e5e7eb 70%);
+    }
+    .app {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 900px;
+      border-left: 1px solid #d1d5db;
+      border-right: 1px solid #d1d5db;
+      background: #f9fafb;
+    }
+    header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #ffffffcc;
+      backdrop-filter: blur(12px);
+    }
+    header h1 {
+      font-size: 1.15rem;
+      margin: 0;
+      font-weight: 600;
+      color: #111827;
+    }
+    header span {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+    #chat-window {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 16px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .system-msg {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #6b7280;
+      margin: 8px 0 4px;
+    }
+    .bubble-row {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+    }
+    .bubble-row.user {
+      justify-content: flex-end;
+    }
+    .bubble {
+      max-width: 75%;
+      padding: 10px 12px;
+      border-radius: 16px;
+      font-size: 0.9rem;
+      line-height: 1.4;
+      white-space: pre-wrap;
+    }
+    .bubble.user {
+      background: #2563eb;
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+    .bubble.bot {
+      background: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-bottom-left-radius: 4px;
+      color: #111827;
+    }
+    .meta {
+      font-size: 0.7rem;
+      color: #6b7280;
+      margin: 2px 4px 8px;
+    }
+    .meta span {
+      margin-right: 8px;
+    }
+    .msg-tools {
+      display: flex;
+      gap: 4px;
+      margin: 2px 4px 8px;
+    }
+    .tool-btn {
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid #e5e7eb;
+      background: #f3f4f6;
+      color: #374151;
+      cursor: pointer;
+    }
+    .tool-btn:hover {
+      background: #e5e7eb;
+    }
+    form {
+      padding: 10px 12px;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      gap: 8px;
+      background: #f3f4f6ee;
+      backdrop-filter: blur(12px);
+    }
+    #user-input {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      background: #ffffff;
+      color: #111827;
+      font-size: 0.9rem;
+      outline: none;
+    }
+    #user-input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 1px #bfdbfe;
+    }
+    button {
+      border-radius: 999px;
+      border: none;
+      padding: 8px 14px;
+      background: #16a34a;
+      color: #f9fafb;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    button[disabled] {
+      opacity: 0.6;
+      cursor: default;
+    }
+    #mic-btn {
+      background: #4b5563;
+    }
+    #mic-btn.recording {
+      background: #ef4444;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      border: 1px solid #d1d5db;
+      padding: 2px 8px;
+      font-size: 0.7rem;
+      background: #f3f4f6;
+      color: #4b5563;
+    }
+    .tag-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      margin-right: 4px;
+      background: #22c55e;
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div>
+      <h1>AURA</h1>
+      <span>Emotion-aware chat • text + voice</span>
+    </div>
+    <div class="tag">
+      <span class="tag-dot"></span>
+      <span>online</span>
+    </div>
+  </header>
+
+  <div id="chat-window">
+    <div class="system-msg">
+      Type a message or press the mic to speak.  
+      History is stored only in this tab (no database).
+    </div>
+  </div>
+
+  <form id="chat-form">
+    <button type="button" id="mic-btn" title="Click to start / stop recording">
+      🎙️
+    </button>
+    <input id="user-input" autocomplete="off"
+           placeholder="Type something you'd tell AURA..." />
+    <button type="submit">
+      <span id="send-label">Send</span>
+    </button>
+  </form>
+</div>
+
+<script>
+  const chatWindow = document.getElementById("chat-window");
+  const form = document.getElementById("chat-form");
+  const input = document.getElementById("user-input");
+  const sendLabel = document.getElementById("send-label");
+  const micBtn = document.getElementById("mic-btn");
+
+  const messages = []; // in-memory history in the browser
+
+  // ----- Text-to-speech -----
+  let currentUtterance = null;
+
+  function speakText(text) {
+    if (!("speechSynthesis" in window)) {
+      alert("Your browser does not support speech synthesis.");
+      return;
+    }
+    // stop any previous speech
+    window.speechSynthesis.cancel();
+    currentUtterance = new SpeechSynthesisUtterance(text);
+    currentUtterance.rate = 1.0;
+    currentUtterance.pitch = 1.0;
+    currentUtterance.onend = () => {
+      currentUtterance = null;
+    };
+    window.speechSynthesis.speak(currentUtterance);
+  }
+
+  function appendMessage(role, text, meta) {
+    const row = document.createElement("div");
+    row.className = "bubble-row " + (role === "user" ? "user" : "bot");
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble " + (role === "user" ? "user" : "bot");
+    bubble.textContent = text;
+    row.appendChild(bubble);
+
+    chatWindow.appendChild(row);
+
+    // tools + meta only for assistant messages
+    if (role === "assistant") {
+      const tools = document.createElement("div");
+      tools.className = "msg-tools";
+
+      const listenBtn = document.createElement("button");
+      listenBtn.type = "button";
+      listenBtn.className = "tool-btn";
+      listenBtn.textContent = "🔊 Listen";
+      listenBtn.onclick = () => speakText(text);
+      tools.appendChild(listenBtn);
+
+      chatWindow.appendChild(tools);
+
+      if (meta) {
+        const metaDiv = document.createElement("div");
+        metaDiv.className = "meta";
+        const emoStr = Object.entries(meta.emotions || {})
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([lab, p]) => `${lab}: ${p.toFixed(2)}`)
+          .join("  •  ");
+        metaDiv.innerHTML =
+          `<span>mode: ${meta.mode}</span>` +
+          `<span>tone: ${meta.style?.tone || "-"}</span>` +
+          `<span>top emotions: ${emoStr || "n/a"}</span>` +
+          (meta.crisis_flag ? `<span>⚠ crisis detected</span>` : "");
+        chatWindow.appendChild(metaDiv);
+      }
+    }
+
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+    messages.push({ role, content: text });
+  }
+
+  // ----- Text message → /api/chat -----
+  async function sendTextMessage(text) {
+    appendMessage("user", text);
+
+    sendLabel.textContent = "Thinking...";
+    form.querySelector("button[type=submit]").disabled = true;
+    micBtn.disabled = true;
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      const data = await res.json();
+
+      appendMessage("assistant", data.reply, {
+        mode: data.mode,
+        emotions: data.emotions,
+        style: data.style,
+        crisis_flag: data.crisis_flag,
+      });
+    } catch (err) {
+      console.error(err);
+      appendMessage(
+        "assistant",
+        "Sorry, something went wrong calling the AURA API.",
+        null
+      );
+    } finally {
+      sendLabel.textContent = "Send";
+      form.querySelector("button[type=submit]").disabled = false;
+      micBtn.disabled = false;
+    }
+  }
+
+  // ----- Audio recording → /api/chat_audio -----
+  let mediaRecorder = null;
+  let audioChunks = [];
+  let isRecording = false;
+
+  async function toggleRecording() {
+    if (isRecording) {
+      isRecording = false;
+      micBtn.classList.remove("recording");
+      micBtn.textContent = "🎙️";
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+      }
+      return;
+    }
+
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaRecorder = new MediaRecorder(stream);
+      audioChunks = [];
+      isRecording = true;
+      micBtn.classList.add("recording");
+      micBtn.textContent = "⏹";
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach((t) => t.stop());
+        if (audioChunks.length === 0) return;
+
+        const blob = new Blob(audioChunks, { type: "audio/webm" });
+        await sendAudioMessage(blob);
+      };
+
+      mediaRecorder.start();
+    } catch (err) {
+      console.error("mic error", err);
+      appendMessage(
+        "assistant",
+        "I couldn't access your microphone. Please check browser permissions.",
+        null
+      );
+      isRecording = false;
+      micBtn.classList.remove("recording");
+      micBtn.textContent = "🎙️";
+    }
+  }
+
+  async function sendAudioMessage(blob) {
+    appendMessage("user", "[voice message]");
+
+    sendLabel.textContent = "Thinking...";
+    form.querySelector("button[type=submit]").disabled = true;
+    micBtn.disabled = true;
+
+    try {
+      const formData = new FormData();
+      formData.append("file", blob, "recording.webm");
+
+      const res = await fetch("/api/chat_audio", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+
+      const data = await res.json();
+
+      if (data.effective_text) {
+        appendMessage("assistant", `(transcript: "${data.effective_text}")`);
+      }
+
+      appendMessage("assistant", data.reply, {
+        mode: data.mode,
+        emotions: data.emotions,
+        style: data.style,
+        crisis_flag: data.crisis_flag,
+      });
+    } catch (err) {
+      console.error(err);
+      appendMessage(
+        "assistant",
+        "Sorry, something went wrong with the audio request.",
+        null
+      );
+    } finally {
+      sendLabel.textContent = "Send";
+      form.querySelector("button[type=submit]").disabled = false;
+      micBtn.disabled = false;
+      micBtn.classList.remove("recording");
+      micBtn.textContent = "🎙️";
+      isRecording = false;
+    }
+  }
+
+  // ----- Events -----
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const text = input.value.trim();
+    if (!text) return;
+    input.value = "";
+    sendTextMessage(text);
+  });
+
+  micBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    toggleRecording();
+  });
+</script>
+</body>
+</html>
