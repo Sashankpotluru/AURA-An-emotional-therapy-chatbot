@@ -1,0 +1,34 @@
+# Core scientific stack
+numpy
+pandas
+scikit-learn
+matplotlib
+
+# PyTorch + audio
+torch
+torchaudio
+
+# Transformers / datasets
+transformers
+datasets
+sentencepiece
+accelerate
+
+# Audio + signal processing
+soundfile
+librosa
+
+# Progress / utilities
+tqdm
+
+# Web API + file upload
+fastapi
+uvicorn
+python-multipart
+pydantic
+
+# LLM / ASR client (API-based)
+openai
+
+# Optional: if you use Jupyter locally for experiments
+jupyter

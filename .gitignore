@@ -14,13 +14,6 @@ env/
 .DS_Store
 Thumbs.db
 
-# Big folders/files we DON'T want on GitHub
-data/
-checkpoints/
-*.ckpt
-*.pt
-*.bin
-
 # Env / secrets
 .env
 *.env
