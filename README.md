@@ -45,12 +45,6 @@ User Input (Text / Voice)
 ## Experimental Results
 
 ### Text ERC: RoBERTa-Base vs RoBERTa-Large
-
-| Model | Epoch | Macro-F1 | Sample Accuracy |
-|-------|-------|----------|-----------------|
-| RoBERTa-Base | 3 | 0.45 | 0.46 |
-| RoBERTa-Large | 3 | **0.62** | **0.47** |
-
 RoBERTa-Large consistently outperforms RoBERTa-Base, reaching a best validation Macro-F1 of 0.62 at epoch 3.
 
 <p align="center">
