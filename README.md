@@ -90,11 +90,8 @@ The best-macro-F1 comparison highlights that the speech model achieves 0.76 (Wav
 *Voice-based interaction where the user sends an audio message about positive news — Whisper transcribes it, speech ERC detects happiness, and AURA generates a cheerful response.*
 
 ### Crisis Detection
-<p align="center">
-  <img src="docs/crisis_detection_example.png" alt="Crisis Detection" width="500"/>
-</p>
 
-*AURA's crisis-aware response — when the user expresses suicidal intent, the system activates crisis detection mode and switches to a safety-focused response directing the user toward professional help.*
+*AURA's crisis-aware response,  when the user expresses suicidal intent, the system activates crisis detection mode and switches to a safety-focused response directing the user toward professional help.*
 
 ## Tech Stack
 
